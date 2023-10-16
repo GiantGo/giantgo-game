@@ -42,8 +42,9 @@ class Engine extends THREE.EventDispatcher {
 
   loadControls() {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement)
-    this.controls.enableDamping = true
-    this.controls.enablePan = true
+    this.controls.enableDamping = false
+    this.controls.rotateSpeed = 0.5
+    this.controls.enablePan = false
     this.controls.minDistance = 5
     this.controls.maxDistance = 20
     this.controls.maxPolarAngle = Math.PI / 2 - 0.05 // prevent camera below ground

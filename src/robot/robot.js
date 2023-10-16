@@ -22,7 +22,7 @@ class Robot extends THREE.Group {
     this.previousAction = null
     this.activeAction = null
     this.toggleRun = false
-    this.runVelocity = 5
+    this.runVelocity = 4
     this.walkVelocity = 2
     this.velocity = new THREE.Vector3()
     this.onFloor = false
@@ -107,7 +107,7 @@ class Robot extends THREE.Group {
     )
 
     onKeyStroke(
-      ['j', 'J'],
+      ['j', 'J', '1'],
       (e) => {
         e.preventDefault()
         this.emotesHandler['Punch']()
