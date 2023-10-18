@@ -20,7 +20,7 @@ class Bullet extends THREE.Group {
     }
 
     this.rigidBody = this.engine.world.createRigidBody(bodyDesc)
-    let collider = RAPIER.ColliderDesc.ball(dimension.radius)
+    let collider = RAPIER.ColliderDesc.ball(dimension.radius).setMass(0.8)
 
     this.engine.world.createCollider(collider, this.rigidBody)
 

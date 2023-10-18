@@ -18,7 +18,7 @@ class Robot extends THREE.Group {
     this.emotesHandler = {}
     this.previousAction = null
     this.activeAction = null
-    this.toggleRun = false
+    this.toggleRun = true
     this.runVelocity = 4
     this.walkVelocity = 2
     this.velocity = new THREE.Vector3()
@@ -98,8 +98,10 @@ class Robot extends THREE.Group {
       ' ',
       (e) => {
         e.preventDefault()
-        this.velocity.y = 15
-        this.emotesHandler.Jump()
+        if (this.onFloor) {
+          this.velocity.y = 15
+          this.emotesHandler.Jump()
+        }
       },
       { eventName: 'keyup' }
     )
@@ -108,16 +110,7 @@ class Robot extends THREE.Group {
       ['j', 'J', '1'],
       (e) => {
         e.preventDefault()
-        const direction = new THREE.Vector3()
-        this.getWorldDirection(direction)
-        this.emotesHandler['Punch']()
-        this.engine.dispatchEvent({
-          type: 'shot',
-          dimension: { radius: 0.1 },
-          translation: this.position.clone().addScaledVector(direction, -1),
-          linvel: new THREE.Vector3().copy(direction).multiplyScalar(-20),
-          color: 'red'
-        })
+        this.shot()
       },
       { eventName: 'keyup' }
     )
@@ -211,6 +204,19 @@ class Robot extends THREE.Group {
     }
   }
 
+  shot() {
+    const direction = new THREE.Vector3()
+    this.getWorldDirection(direction)
+    this.engine.dispatchEvent({
+      type: 'shot',
+      dimension: { radius: 0.2 },
+      translation: this.position.clone().addScaledVector(direction, -1),
+      linvel: new THREE.Vector3().copy(direction).multiplyScalar(-20),
+      color: 'red'
+    })
+    this.emotesHandler['Punch']()
+  }
+
   updateCameraTarget(offset) {
     // move camera
     const rigidTranslation = this.rigidBody.translation()
@@ -260,7 +266,7 @@ class Robot extends THREE.Group {
 
     const translation = this.rigidBody.translation()
 
-    if (translation.y < -500) {
+    if (translation.y < -10) {
       // don't fall below ground
       this.rigidBody.setNextKinematicTranslation({
         x: 0,
@@ -286,8 +292,11 @@ class Robot extends THREE.Group {
 
       let correctedMovement = this.characterController.computedMovement()
 
-      if (correctedMovement.y === 0) {
-        this.onFloor = true
+      const diff = Math.abs(this.walkDirection.y - correctedMovement.y)
+
+      this.onFloor = diff > 0.001
+
+      if (this.onFloor) {
         this.velocity.y = 0
       }
 

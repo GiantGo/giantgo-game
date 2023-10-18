@@ -23,6 +23,7 @@ class Engine extends THREE.EventDispatcher {
   loadScene() {
     this.scene = new THREE.Scene()
     this.scene.background = new THREE.Color(0xa8def0)
+    this.scene.fog = new THREE.Fog(0x88ccee, 0, 50)
   }
 
   loadCamera() {
@@ -37,6 +38,7 @@ class Engine extends THREE.EventDispatcher {
     this.renderer.setPixelRatio(window.devicePixelRatio)
     this.renderer.setSize(window.innerWidth, window.innerHeight)
     this.renderer.shadowMap.enabled = true
+    this.renderer.shadowMap.type = THREE.VSMShadowMap
     document.getElementById('container').appendChild(this.renderer.domElement)
   }
 
@@ -45,10 +47,10 @@ class Engine extends THREE.EventDispatcher {
     this.controls.enableDamping = false
     this.controls.rotateSpeed = 0.5
     this.controls.enablePan = false
-    // this.controls.minDistance = 5
-    // this.controls.maxDistance = 20
-    // this.controls.maxPolarAngle = Math.PI / 2 - 0.05 // prevent camera below ground
-    // this.controls.minPolarAngle = Math.PI / 4 // prevent top down view
+    this.controls.minDistance = 5
+    this.controls.maxDistance = 20
+    this.controls.maxPolarAngle = Math.PI / 2 - 0.05 // prevent camera below ground
+    this.controls.minPolarAngle = Math.PI / 4 // prevent top down view
     this.controls.update()
   }
 
@@ -59,6 +61,17 @@ class Engine extends THREE.EventDispatcher {
 
     const dirLight = new THREE.DirectionalLight(0xffffff, 3)
     dirLight.position.set(0, 20, 10)
+    dirLight.castShadow = true
+    dirLight.shadow.camera.near = 0.01
+    dirLight.shadow.camera.far = 500
+    dirLight.shadow.camera.right = 30
+    dirLight.shadow.camera.left = -30
+    dirLight.shadow.camera.top = 30
+    dirLight.shadow.camera.bottom = -30
+    dirLight.shadow.mapSize.width = 1024
+    dirLight.shadow.mapSize.height = 1024
+    dirLight.shadow.radius = 4
+    dirLight.shadow.bias = -0.00006
     this.scene.add(dirLight)
   }
 
