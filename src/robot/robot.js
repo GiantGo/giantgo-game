@@ -52,7 +52,6 @@ class Robot extends THREE.Group {
     ]
     this.direction = this.directionDic[1][1]
     this.restoreStateHandler = this.restoreState.bind(this)
-    this.bullets = []
 
     const debounceAnimate = useDebounceFn(() => {
       this.animate()
@@ -114,6 +113,10 @@ class Robot extends THREE.Group {
       },
       { eventName: 'keyup' }
     )
+
+    document.addEventListener('mouseup', () => {
+      this.shot()
+    })
 
     this.loadModel()
   }
@@ -236,10 +239,6 @@ class Robot extends THREE.Group {
 
     if (!this.rigidBody) return
 
-    this.bullets.forEach((bullet) => {
-      bullet.update()
-    })
-
     this.velocity.x = this.velocity.z =
       this.direction[0] === 'Stop' ? 0 : this.toggleRun ? this.runVelocity : this.walkVelocity
     this.velocity.y = THREE.MathUtils.lerp(this.velocity.y, -9.81, 0.05)
@@ -292,9 +291,7 @@ class Robot extends THREE.Group {
 
       let correctedMovement = this.characterController.computedMovement()
 
-      const diff = Math.abs(this.walkDirection.y - correctedMovement.y)
-
-      this.onFloor = diff > 0.001
+      this.onFloor = Math.abs(this.walkDirection.y - correctedMovement.y) > 0.001
 
       if (this.onFloor) {
         this.velocity.y = 0
