@@ -4,10 +4,10 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js'
 import RAPIER from '@dimforge/rapier3d-compat'
 
 class Terrain extends THREE.Group {
-  constructor(world) {
+  constructor(engine) {
     super()
 
-    this.world = world
+    this.engine = engine
     this.loadModel()
   }
 
@@ -33,12 +33,12 @@ class Terrain extends THREE.Group {
           const vertices = geometry.attributes.position.array
           const indices = geometry.index.array
           const rigidBodyDesc = RAPIER.RigidBodyDesc.fixed()
-          const rigidBody = this.world.createRigidBody(rigidBodyDesc)
+          const rigidBody = this.engine.world.createRigidBody(rigidBodyDesc)
           const colliderDesc = RAPIER.ColliderDesc.trimesh(vertices, indices)
 
           rigidBody.setTranslation(child.position)
 
-          this.world.createCollider(colliderDesc, rigidBody)
+          this.engine.world.createCollider(colliderDesc, rigidBody)
         }
       })
     })

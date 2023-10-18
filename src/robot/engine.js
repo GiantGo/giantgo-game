@@ -45,10 +45,10 @@ class Engine extends THREE.EventDispatcher {
     this.controls.enableDamping = false
     this.controls.rotateSpeed = 0.5
     this.controls.enablePan = false
-    this.controls.minDistance = 5
-    this.controls.maxDistance = 20
-    this.controls.maxPolarAngle = Math.PI / 2 - 0.05 // prevent camera below ground
-    this.controls.minPolarAngle = Math.PI / 4 // prevent top down view
+    // this.controls.minDistance = 5
+    // this.controls.maxDistance = 20
+    // this.controls.maxPolarAngle = Math.PI / 2 - 0.05 // prevent camera below ground
+    // this.controls.minPolarAngle = Math.PI / 4 // prevent top down view
     this.controls.update()
   }
 

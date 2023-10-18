@@ -8,13 +8,10 @@ const emotes = ['Jump', 'Yes', 'No', 'Wave', 'Punch', 'ThumbsUp']
 const CONTROLLER_BODY_RADIUS = 0.25
 
 class Robot extends THREE.Group {
-  constructor(world, camera, controls, controller) {
+  constructor(engine) {
     super()
 
-    this.world = world
-    this.camera = camera
-    this.controls = controls
-    this.controller = controller
+    this.engine = engine
     this.state = 'Idle'
     this.emote = ''
     this.actions = {}
@@ -55,6 +52,7 @@ class Robot extends THREE.Group {
     ]
     this.direction = this.directionDic[1][1]
     this.restoreStateHandler = this.restoreState.bind(this)
+    this.bullets = []
 
     const debounceAnimate = useDebounceFn(() => {
       this.animate()
@@ -110,7 +108,16 @@ class Robot extends THREE.Group {
       ['j', 'J', '1'],
       (e) => {
         e.preventDefault()
+        const direction = new THREE.Vector3()
+        this.getWorldDirection(direction)
         this.emotesHandler['Punch']()
+        this.engine.dispatchEvent({
+          type: 'shot',
+          dimension: { radius: 0.1 },
+          translation: this.position.clone().addScaledVector(direction, -1),
+          linvel: new THREE.Vector3().copy(direction).multiplyScalar(-20),
+          color: 'red'
+        })
       },
       { eventName: 'keyup' }
     )
@@ -146,10 +153,10 @@ class Robot extends THREE.Group {
 
         // RIGID BODY
         let bodyDesc = RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(-5, 2.4, -0.5)
-        this.rigidBody = this.world.createRigidBody(bodyDesc)
+        this.rigidBody = this.engine.world.createRigidBody(bodyDesc)
         let dynamicCollider = RAPIER.ColliderDesc.capsule(CONTROLLER_BODY_RADIUS, CONTROLLER_BODY_RADIUS)
-        this.collider = this.world.createCollider(dynamicCollider, this.rigidBody)
-        this.characterController = this.world.createCharacterController(0.01)
+        this.collider = this.engine.world.createCollider(dynamicCollider, this.rigidBody)
+        this.characterController = this.engine.world.createCharacterController(0.01)
         this.characterController.setMaxSlopeClimbAngle((45 * Math.PI) / 180)
         this.characterController.enableAutostep(0.5, 0.2, true)
         this.characterController.enableSnapToGround(0.5)
@@ -207,21 +214,25 @@ class Robot extends THREE.Group {
   updateCameraTarget(offset) {
     // move camera
     const rigidTranslation = this.rigidBody.translation()
-    this.camera.position.x = rigidTranslation.x + offset.x
-    this.camera.position.y = rigidTranslation.y + offset.y
-    this.camera.position.z = rigidTranslation.z + offset.z
+    this.engine.camera.position.x = rigidTranslation.x + offset.x
+    this.engine.camera.position.y = rigidTranslation.y + offset.y
+    this.engine.camera.position.z = rigidTranslation.z + offset.z
 
     // update camera target
     this.cameraTarget.x = rigidTranslation.x
     this.cameraTarget.y = rigidTranslation.y + 1
     this.cameraTarget.z = rigidTranslation.z
-    this.controls.target = this.cameraTarget
+    this.engine.controls.target = this.cameraTarget
   }
 
   update(dt) {
     if (this.mixer) this.mixer.update(dt)
 
     if (!this.rigidBody) return
+
+    this.bullets.forEach((bullet) => {
+      bullet.update()
+    })
 
     this.velocity.x = this.velocity.z =
       this.direction[0] === 'Stop' ? 0 : this.toggleRun ? this.runVelocity : this.walkVelocity
@@ -230,8 +241,8 @@ class Robot extends THREE.Group {
 
     if (this.direction[0] !== 'Stop') {
       var angleYCameraDirection = Math.atan2(
-        this.camera.position.x - this.position.x,
-        this.camera.position.z - this.position.z
+        this.engine.camera.position.x - this.position.x,
+        this.engine.camera.position.z - this.position.z
       )
       // diagonal movement angle offset
       var directionOffset = this.direction[1]
@@ -241,7 +252,7 @@ class Robot extends THREE.Group {
       this.quaternion.rotateTowards(this.rotateQuarternion, 0.2)
 
       // calculate direction
-      this.camera.getWorldDirection(this.walkDirection)
+      this.engine.camera.getWorldDirection(this.walkDirection)
       this.walkDirection.y = 0
       this.walkDirection.normalize()
       this.walkDirection.applyAxisAngle(this.rotateAngle, directionOffset)
@@ -257,7 +268,7 @@ class Robot extends THREE.Group {
         z: 0
       })
     } else {
-      const cameraPositionOffset = this.camera.position.clone().sub(this.position)
+      const cameraPositionOffset = this.engine.camera.position.clone().sub(this.position)
       this.updateCameraTarget(cameraPositionOffset)
 
       // update model and camera
