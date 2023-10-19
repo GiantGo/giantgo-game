@@ -70,7 +70,7 @@ class Player extends THREE.Group {
     this.previousAction = this.activeAction
     this.activeAction = this.actions[name]
 
-    if (this.previousAction !== this.activeAction) {
+    if (this.previousAction !== this.activeAction && this.activeAction) {
       this.previousAction && this.previousAction.fadeOut(duration)
       this.activeAction.reset().setEffectiveTimeScale(1).setEffectiveWeight(1).fadeIn(duration).play()
     }
