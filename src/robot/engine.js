@@ -7,6 +7,10 @@ class Engine extends THREE.EventDispatcher {
     super()
     this.clock = new THREE.Clock()
     this.world = new RAPIER.World({ x: 0.0, y: -9.81, z: 0.0 })
+    this.characterController = this.world.createCharacterController(0.01)
+    this.characterController.setMaxSlopeClimbAngle((45 * Math.PI) / 180)
+    this.characterController.enableAutostep(0.5, 0.2, true)
+    this.characterController.enableSnapToGround(0.5)
 
     this.loadScene()
     this.loadCamera()
