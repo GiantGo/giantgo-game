@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import * as TWEEN from '@tweenjs/tween.js'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 
 const states = ['Idle', 'Walking', 'Running', 'Dance', 'Death', 'Sitting', 'Standing']
@@ -70,10 +71,20 @@ class Player extends THREE.Group {
     this.previousAction = this.activeAction
     this.activeAction = this.actions[name]
 
-    if (this.previousAction !== this.activeAction && this.activeAction) {
+    if (!this.activeAction) return
+
+    if (this.previousAction !== this.activeAction) {
       this.previousAction && this.previousAction.fadeOut(duration)
       this.activeAction.reset().setEffectiveTimeScale(1).setEffectiveWeight(1).fadeIn(duration).play()
     }
+  }
+
+  applyServer(data) {
+    new TWEEN.Tween(this.position).to(data.position, 50).easing(TWEEN.Easing.Linear.None).start()
+    new TWEEN.Tween(this.quaternion).to(data.quaternion, 50).easing(TWEEN.Easing.Linear.None).start()
+    this.state = data.state
+    this.emote = data.emote
+    this.fadeToAction(this.emote || this.state, 0.2)
   }
 
   toJSON() {

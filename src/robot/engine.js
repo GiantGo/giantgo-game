@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import * as TWEEN from '@tweenjs/tween.js'
 import RAPIER from '@dimforge/rapier3d-compat'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 
@@ -107,6 +108,7 @@ class Engine extends THREE.EventDispatcher {
     this.world.step()
     this.renderer.render(this.scene, this.camera)
     this.controls.update()
+    TWEEN.update()
     this.dispatchEvent({ type: 'update', dt: this.clock.getDelta() })
     requestAnimationFrame(this.update.bind(this))
   }

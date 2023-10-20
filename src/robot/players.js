@@ -23,16 +23,22 @@ class Players extends THREE.Group {
 
   updatePlayer(sessionId, data) {
     const player = this.players.get(sessionId)
-    player.position.x = data.position.x
-    player.position.y = data.position.y
-    player.position.z = data.position.z
-    player.quaternion.x = data.quaternion.x
-    player.quaternion.y = data.quaternion.y
-    player.quaternion.z = data.quaternion.z
-    player.quaternion.w = data.quaternion.w
-    player.state = data.state
-    player.emote = data.emote
-    player.fadeToAction(player.emote || player.state, 0.2)
+    // 应用服务器端状态
+    player.applyServer({
+      state: data.state,
+      emote: data.emote,
+      position: {
+        x: data.positionX,
+        y: data.positionY,
+        z: data.positionZ
+      },
+      quaternion: {
+        x: data.quaternionX,
+        y: data.quaternionY,
+        z: data.quaternionZ,
+        w: data.quaternionW
+      }
+    })
   }
 
   update(dt) {

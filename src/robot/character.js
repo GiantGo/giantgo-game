@@ -103,9 +103,9 @@ class Character {
       { eventName: 'keyup' }
     )
 
-    document.addEventListener('mouseup', () => {
-      this.shot()
-    })
+    // document.addEventListener('mouseup', () => {
+    //   this.shot()
+    // })
 
     this.loadModel()
   }
