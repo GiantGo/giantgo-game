@@ -10,7 +10,7 @@ class Client extends THREE.EventDispatcher {
   }
 
   async load() {
-    this.client = new Colyseus.Client('ws://localhost:2567')
+    this.client = new Colyseus.Client('ws://localhost:2567/test/server')
     this.room = await this.client.joinOrCreate('my_room')
 
     this.room.state.players.onAdd((player, sessionId) => {
