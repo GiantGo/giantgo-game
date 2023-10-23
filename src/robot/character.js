@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import RAPIER from '@dimforge/rapier3d-compat'
-import { onKeyStroke, useDebounceFn } from '@vueuse/core'
+import { onKeyStroke } from '@vueuse/core'
 
 const CONTROLLER_BODY_RADIUS = 0.25
 
@@ -42,10 +42,6 @@ class Character {
     ]
     this.direction = this.directionDic[1][1]
 
-    const debounceAnimate = useDebounceFn(() => {
-      this.animate()
-    }, 100)
-
     onKeyStroke(
       ['a', 'A', 'ArrowLeft', 'd', 'D', 'ArrowRight', 'w', 'W', 'ArrowUp', 's', 'S', 'ArrowDown'],
       (e) => {
@@ -67,7 +63,7 @@ class Character {
         this.directions.d = ['d', 'D', 'ArrowRight'].includes(e.key) ? false : this.directions.d
         this.directions.w = ['w', 'W', 'ArrowUp'].includes(e.key) ? false : this.directions.w
         this.directions.s = ['s', 'S', 'ArrowDown'].includes(e.key) ? false : this.directions.s
-        debounceAnimate()
+        this.animate()
       },
       { eventName: 'keyup' }
     )
@@ -77,7 +73,7 @@ class Character {
       (e) => {
         e.preventDefault()
         this.toggleRun = !this.toggleRun
-        debounceAnimate()
+        this.animate()
       },
       { eventName: 'keyup' }
     )
@@ -91,7 +87,7 @@ class Character {
           this.player.emotesHandler.Jump()
         }
       },
-      { eventName: 'keyup' }
+      { eventName: 'keydown', dedupe: true }
     )
 
     onKeyStroke(
@@ -129,7 +125,7 @@ class Character {
 
     this.direction = this.directionDic[row][col]
     this.player.state = this.direction[0] === 'Stop' ? 'Idle' : this.toggleRun ? 'Running' : 'Walking'
-    this.player.fadeToAction(this.player.state, 0.2)
+    this.player.fadeToAction()
   }
 
   shot() {

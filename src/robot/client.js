@@ -24,7 +24,6 @@ class Client extends THREE.EventDispatcher {
 
       player.onChange(() => {
         if (!isMe) {
-          console.log(player)
           this.players.updatePlayer(sessionId, player)
         }
       })

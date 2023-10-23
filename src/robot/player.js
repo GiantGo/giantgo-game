@@ -46,7 +46,7 @@ class Player extends THREE.Group {
           this.createEmoteCallback(emotes[i])
         }
 
-        this.fadeToAction('Idle', 0.2)
+        this.fadeToAction()
 
         resolve()
       })
@@ -56,20 +56,20 @@ class Player extends THREE.Group {
   createEmoteCallback(name) {
     this.emotesHandler[name] = () => {
       this.emote = name
-      this.fadeToAction(name, 0.2)
+      this.fadeToAction()
       this.mixer.addEventListener('finished', this.restoreStateHandler)
     }
   }
 
   restoreState() {
     this.emote = ''
-    this.fadeToAction(this.state, 0.2)
+    this.fadeToAction()
     this.mixer.removeEventListener('finished', this.restoreStateHandler)
   }
 
-  fadeToAction(name, duration) {
+  fadeToAction(duration = 0.2) {
     this.previousAction = this.activeAction
-    this.activeAction = this.actions[name]
+    this.activeAction = this.actions[this.emote || this.state]
 
     if (!this.activeAction) return
 
@@ -80,11 +80,20 @@ class Player extends THREE.Group {
   }
 
   applyServer(data) {
-    new TWEEN.Tween(this.position).to(data.position, 50).easing(TWEEN.Easing.Linear.None).start()
-    new TWEEN.Tween(this.quaternion).to(data.quaternion, 50).easing(TWEEN.Easing.Linear.None).start()
+    this.tween = new TWEEN.Tween({
+      position: this.position,
+      quaternion: this.quaternion
+    })
+      .to({ position: data.position, quaternion: data.quaternion }, 50)
+      .onUpdate((object) => {
+        this.position.copy(object.position)
+        this.quaternion.copy(object.quaternion)
+      })
+      .easing(TWEEN.Easing.Linear.None)
+      .start()
     this.state = data.state
     this.emote = data.emote
-    this.fadeToAction(this.emote || this.state, 0.2)
+    this.fadeToAction()
   }
 
   toJSON() {
