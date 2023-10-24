@@ -5,7 +5,6 @@
 import { onMounted } from 'vue'
 import RAPIER from '@dimforge/rapier3d-compat'
 import { Engine } from '../robot/engine'
-import { Client } from '../robot/client'
 import { Character } from '../robot/character'
 import { Player } from '../robot/player'
 import { Players } from '../robot/players'
@@ -16,7 +15,6 @@ onMounted(() => {
   RAPIER.init().then(() => {
     let player, character
     const engine = new Engine()
-    const client = new Client()
     const players = new Players(engine)
     const bullets = new Bullets(engine)
     const terrain = new Terrain(engine)
@@ -29,19 +27,18 @@ onMounted(() => {
     engine.addEventListener('update', ({ dt }) => {
       bullets.update()
       players.update(dt)
-      player && player.update(dt)
       character && character.update(dt)
-
-      if (client.room && player) {
-        client.room.send('update_player', player.toJSON())
-      }
     })
 
-    client.addEventListener('remove_player', ({ sessionId }) => {
+    engine.addEventListener('punch', (args) => {
+      bullets.addBullet(args)
+    })
+
+    engine.addEventListener('remove_player', ({ sessionId }) => {
       players.removePlayer(sessionId)
     })
 
-    client.addEventListener('add_player', ({ sessionId, data, isMe }) => {
+    engine.addEventListener('add_player', ({ sessionId, data, isMe }) => {
       if (isMe) {
         player = new Player(engine, data.color)
         player.position.set(data.positionX, data.positionY, data.positionZ)
@@ -52,7 +49,7 @@ onMounted(() => {
       }
     })
 
-    client.addEventListener('update_player', ({ sessionId, data, isMe }) => {
+    engine.addEventListener('update_player', ({ sessionId, data, isMe }) => {
       if (isMe) {
         console.log(data.positionX, data.positionZ)
       } else {

@@ -134,7 +134,7 @@ class Character {
   }
 
   update(dt) {
-    if (this.mixer) this.mixer.update(dt)
+    this.player.update(dt)
 
     this.velocity.x = this.velocity.z =
       this.direction[0] === 'Stop' || this.player.state === 'Death' ? 0 : this.runVelocity
@@ -199,6 +199,10 @@ class Character {
         y: translation.y + correctedMovement.y,
         z: translation.z + correctedMovement.z
       })
+
+      if (this.engine.room) {
+        this.engine.room.send('update_player', this.player.toJSON())
+      }
     }
   }
 }

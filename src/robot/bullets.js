@@ -7,14 +7,10 @@ class Bullets extends THREE.Group {
 
     this.engine = engine
     this.bullets = []
-
-    this.engine.addEventListener('punch', (args) => {
-      this.addBullet(args)
-    })
   }
 
-  addBullet({ dimension, translation, linvel, color }) {
-    const bullet = new Bullet(this.engine, dimension, translation, linvel, color)
+  addBullet(args) {
+    const bullet = new Bullet(this.engine, args)
     this.add(bullet)
     this.bullets.push(bullet)
   }

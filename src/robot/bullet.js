@@ -2,15 +2,15 @@ import * as THREE from 'three'
 import RAPIER from '@dimforge/rapier3d-compat'
 
 class Bullet extends THREE.Group {
-  constructor(engine, dimension, translation, linvel, color) {
+  constructor(engine, args) {
     super()
 
     this.engine = engine
 
-    this.loadModel(dimension, translation, linvel, color)
+    this.loadModel(args)
   }
 
-  loadModel(dimension, translation, linvel, color) {
+  loadModel({ dimension, translation, linvel, color }) {
     let bodyDesc = RAPIER.RigidBodyDesc.dynamic()
 
     bodyDesc.setLinvel(linvel.x, linvel.y, linvel.z)

@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import * as TWEEN from '@tweenjs/tween.js'
 import RAPIER from '@dimforge/rapier3d-compat'
+import * as Colyseus from 'colyseus.js' // not necessary if included via <script> tag.
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 
 class Engine extends THREE.EventDispatcher {
@@ -18,9 +19,7 @@ class Engine extends THREE.EventDispatcher {
     this.loadRenderer()
     this.loadControls()
     this.loadLights()
-
-    const axesHelper = new THREE.AxesHelper(20000)
-    this.scene.add(axesHelper)
+    this.loadClient()
 
     window.addEventListener('resize', this.onWindowResize.bind(this))
   }
@@ -78,6 +77,27 @@ class Engine extends THREE.EventDispatcher {
     dirLight.shadow.radius = 4
     dirLight.shadow.bias = -0.00006
     this.scene.add(dirLight)
+  }
+
+  loadClient() {
+    this.client = new Colyseus.Client('ws://localhost:2567/test/server')
+    this.client.joinOrCreate('my_room').then((room) => {
+      this.room = room
+
+      this.room.state.players.onAdd((player, sessionId) => {
+        const isMe = this.room.sessionId === sessionId
+
+        this.dispatchEvent({ type: 'add_player', sessionId, data: player, isMe })
+
+        player.onChange(() => {
+          this.dispatchEvent({ type: 'update_player', sessionId, data: player, isMe })
+        })
+      })
+
+      this.room.state.players.onRemove((player, sessionId) => {
+        this.dispatchEvent({ type: 'remove_player', sessionId })
+      })
+    })
   }
 
   onWindowResize() {
