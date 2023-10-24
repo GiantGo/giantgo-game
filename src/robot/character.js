@@ -1,16 +1,11 @@
 import * as THREE from 'three'
-import RAPIER from '@dimforge/rapier3d-compat'
 import { onKeyStroke } from '@vueuse/core'
-
-const CONTROLLER_BODY_RADIUS = 0.25
 
 class Character {
   constructor(engine, player) {
     this.engine = engine
     this.player = player
-    this.toggleRun = true
     this.runVelocity = 4
-    this.walkVelocity = 2
     this.velocity = new THREE.Vector3()
     this.onFloor = false
     this.walkDirection = new THREE.Vector3()
@@ -69,20 +64,10 @@ class Character {
     )
 
     onKeyStroke(
-      'Shift',
-      (e) => {
-        e.preventDefault()
-        this.toggleRun = !this.toggleRun
-        this.animate()
-      },
-      { eventName: 'keyup' }
-    )
-
-    onKeyStroke(
       ' ',
       (e) => {
         e.preventDefault()
-        if (this.onFloor) {
+        if (this.onFloor && this.player.state !== 'Death') {
           this.velocity.y = 15
           this.player.emotesHandler.Jump()
         }
@@ -94,28 +79,20 @@ class Character {
       ['j', 'J', '1'],
       (e) => {
         e.preventDefault()
-        this.shot()
+        if (this.player.emote !== 'Punch' && this.player.state !== 'Death') {
+          this.punch()
+        }
       },
       { eventName: 'keyup' }
     )
 
-    this.loadModel()
-  }
-
-  loadModel() {
-    // RIGID BODY
-    let bodyDesc = RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(
-      this.player.position.x,
-      this.player.position.y,
-      this.player.position.z
-    )
-    this.rigidBody = this.engine.world.createRigidBody(bodyDesc)
-    let dynamicCollider = RAPIER.ColliderDesc.capsule(CONTROLLER_BODY_RADIUS, CONTROLLER_BODY_RADIUS)
-    this.collider = this.engine.world.createCollider(dynamicCollider, this.rigidBody)
+    this.player.rigidBody.setTranslation(this.player.position)
     this.updateCameraTarget(new THREE.Vector3(0, 1, 5))
   }
 
   animate() {
+    if (this.player.state === 'Death') return
+
     let col = 1
     let row = 1
 
@@ -125,26 +102,26 @@ class Character {
     row += this.directions.s ? 1 : 0
 
     this.direction = this.directionDic[row][col]
-    this.player.state = this.direction[0] === 'Stop' ? 'Idle' : this.toggleRun ? 'Running' : 'Walking'
+    this.player.state = this.direction[0] === 'Stop' ? 'Idle' : 'Running'
     this.player.fadeToAction()
   }
 
-  shot() {
+  punch() {
     const direction = new THREE.Vector3()
     this.player.getWorldDirection(direction)
     this.engine.dispatchEvent({
-      type: 'shot',
+      type: 'punch',
       dimension: { radius: 0.2 },
       translation: this.player.position.clone().addScaledVector(direction, -1),
       linvel: new THREE.Vector3().copy(direction).multiplyScalar(-20),
-      color: 'red'
+      color: this.player.color
     })
     this.player.emotesHandler.Punch()
   }
 
   updateCameraTarget(offset) {
     // move camera
-    const rigidTranslation = this.rigidBody.translation()
+    const rigidTranslation = this.player.rigidBody.translation()
     this.engine.camera.position.x = rigidTranslation.x + offset.x
     this.engine.camera.position.y = rigidTranslation.y + offset.y
     this.engine.camera.position.z = rigidTranslation.z + offset.z
@@ -159,10 +136,8 @@ class Character {
   update(dt) {
     if (this.mixer) this.mixer.update(dt)
 
-    if (!this.rigidBody) return
-
     this.velocity.x = this.velocity.z =
-      this.direction[0] === 'Stop' ? 0 : this.toggleRun ? this.runVelocity : this.walkVelocity
+      this.direction[0] === 'Stop' || this.player.state === 'Death' ? 0 : this.runVelocity
     this.velocity.y = THREE.MathUtils.lerp(this.velocity.y, -9.81, 0.05)
     this.walkDirection.x = this.walkDirection.z = 0
 
@@ -185,11 +160,11 @@ class Character {
       this.walkDirection.applyAxisAngle(this.rotateAngle, directionOffset)
     }
 
-    const translation = this.rigidBody.translation()
+    const translation = this.player.rigidBody.translation()
 
     if (translation.y < -10) {
       // don't fall below ground
-      this.rigidBody.setNextKinematicTranslation({
+      this.player.rigidBody.setNextKinematicTranslation({
         x: 0,
         y: 10,
         z: 0
@@ -207,7 +182,7 @@ class Character {
       this.walkDirection.multiply(this.velocity.clone().multiplyScalar(dt))
 
       this.engine.characterController.computeColliderMovement(
-        this.collider, // The collider we would like to move.
+        this.player.collider, // The collider we would like to move.
         this.walkDirection
       )
 
@@ -219,7 +194,7 @@ class Character {
         this.velocity.y = 0
       }
 
-      this.rigidBody.setNextKinematicTranslation({
+      this.player.rigidBody.setNextKinematicTranslation({
         x: translation.x + correctedMovement.x,
         y: translation.y + correctedMovement.y,
         z: translation.z + correctedMovement.z

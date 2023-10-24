@@ -1,14 +1,17 @@
 import * as THREE from 'three'
 import * as TWEEN from '@tweenjs/tween.js'
+import RAPIER from '@dimforge/rapier3d-compat'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 
 const states = ['Idle', 'Walking', 'Running', 'Dance', 'Death', 'Sitting', 'Standing']
 const emotes = ['Jump', 'Yes', 'No', 'Wave', 'Punch', 'ThumbsUp']
+const CONTROLLER_BODY_RADIUS = 0.25
 
 class Player extends THREE.Group {
-  constructor(color) {
+  constructor(engine, color) {
     super()
 
+    this.engine = engine
     this.state = 'Idle'
     this.emote = ''
     this.color = new THREE.Color(color)
@@ -19,6 +22,7 @@ class Player extends THREE.Group {
     this.restoreStateHandler = this.restoreState.bind(this)
 
     this.loadModel()
+    this.loadRigidBody()
   }
 
   loadModel() {
@@ -88,6 +92,13 @@ class Player extends THREE.Group {
     }
   }
 
+  loadRigidBody() {
+    let bodyDesc = RAPIER.RigidBodyDesc.kinematicPositionBased()
+    this.rigidBody = this.engine.world.createRigidBody(bodyDesc)
+    let dynamicCollider = RAPIER.ColliderDesc.capsule(CONTROLLER_BODY_RADIUS, CONTROLLER_BODY_RADIUS)
+    this.collider = this.engine.world.createCollider(dynamicCollider, this.rigidBody)
+  }
+
   applyServer(data) {
     this.tween = new TWEEN.Tween({
       position: this.position,
@@ -97,6 +108,7 @@ class Player extends THREE.Group {
       .onUpdate((object) => {
         this.position.copy(object.position)
         this.quaternion.copy(object.quaternion)
+        this.rigidBody.setTranslation(data.position)
       })
       .easing(TWEEN.Easing.Linear.None)
       .start()

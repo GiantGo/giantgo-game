@@ -8,7 +8,7 @@ class Bullets extends THREE.Group {
     this.engine = engine
     this.bullets = []
 
-    this.engine.addEventListener('shot', (args) => {
+    this.engine.addEventListener('punch', (args) => {
       this.addBullet(args)
     })
   }

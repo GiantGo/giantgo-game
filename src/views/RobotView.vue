@@ -43,7 +43,7 @@ onMounted(() => {
 
     client.addEventListener('add_player', ({ sessionId, data, isMe }) => {
       if (isMe) {
-        player = new Player(data.color)
+        player = new Player(engine, data.color)
         player.position.set(data.positionX, data.positionY, data.positionZ)
         engine.scene.add(player)
         character = new Character(engine, player)

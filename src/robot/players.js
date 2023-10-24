@@ -2,15 +2,15 @@ import * as THREE from 'three'
 import { Player } from './player'
 
 class Players extends THREE.Group {
-  constructor() {
+  constructor(engine) {
     super()
 
+    this.engine = engine
     this.players = new Map()
   }
 
   addPlayer(sessionId, data) {
-    const player = new Player(data.color)
-    player.name = sessionId
+    const player = new Player(this.engine, data.color)
     this.add(player)
     this.players.set(sessionId, player)
   }
