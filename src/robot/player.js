@@ -6,11 +6,12 @@ const states = ['Idle', 'Walking', 'Running', 'Dance', 'Death', 'Sitting', 'Stan
 const emotes = ['Jump', 'Yes', 'No', 'Wave', 'Punch', 'ThumbsUp']
 
 class Player extends THREE.Group {
-  constructor() {
+  constructor(color) {
     super()
 
     this.state = 'Idle'
     this.emote = ''
+    this.color = new THREE.Color(color)
     this.actions = {}
     this.emotesHandler = {}
     this.previousAction = null
@@ -24,12 +25,20 @@ class Player extends THREE.Group {
     return new Promise((resolve) => {
       const loader = new GLTFLoader()
       loader.load('./robot/Robot.glb', (gltf) => {
-        const model = gltf.scene
-        model.scale.set(0.2, 0.2, 0.2)
-        model.translateY(-0.5)
+        this.model = gltf.scene
+        this.model.scale.set(0.2, 0.2, 0.2)
+        this.model.translateY(-0.5)
 
-        this.add(model)
-        this.mixer = new THREE.AnimationMixer(model)
+        this.model.traverse((child) => {
+          if (child.isMesh) {
+            if (child.material.name === 'Main') {
+              child.material.color = this.color
+            }
+          }
+        })
+
+        this.add(this.model)
+        this.mixer = new THREE.AnimationMixer(this.model)
 
         for (let i = 0; i < gltf.animations.length; i++) {
           const clip = gltf.animations[i]

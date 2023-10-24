@@ -14,15 +14,13 @@ import { Terrain } from '../robot/terrain'
 
 onMounted(() => {
   RAPIER.init().then(() => {
+    let player, character
     const engine = new Engine()
+    const client = new Client()
     const players = new Players(engine)
-    const client = new Client(players)
-    const player = new Player(engine)
-    const character = new Character(engine, player)
     const bullets = new Bullets(engine)
     const terrain = new Terrain(engine)
 
-    engine.scene.add(player)
     engine.scene.add(players)
     engine.scene.add(bullets)
     engine.scene.add(terrain)
@@ -30,12 +28,35 @@ onMounted(() => {
     engine.update()
     engine.addEventListener('update', ({ dt }) => {
       bullets.update()
-      character.update(dt)
-      player.update(dt)
       players.update(dt)
+      player && player.update(dt)
+      character && character.update(dt)
 
-      if (client.room) {
+      if (client.room && player) {
         client.room.send('update_player', player.toJSON())
+      }
+    })
+
+    client.addEventListener('remove_player', ({ sessionId }) => {
+      players.removePlayer(sessionId)
+    })
+
+    client.addEventListener('add_player', ({ sessionId, data, isMe }) => {
+      if (isMe) {
+        player = new Player(data.color)
+        player.position.set(data.positionX, data.positionY, data.positionZ)
+        engine.scene.add(player)
+        character = new Character(engine, player)
+      } else {
+        players.addPlayer(sessionId, data)
+      }
+    })
+
+    client.addEventListener('update_player', ({ sessionId, data, isMe }) => {
+      if (isMe) {
+        console.log(data.positionX, data.positionZ)
+      } else {
+        players.updatePlayer(sessionId, data)
       }
     })
   })

@@ -8,8 +8,8 @@ class Players extends THREE.Group {
     this.players = new Map()
   }
 
-  addPlayer(sessionId) {
-    const player = new Player()
+  addPlayer(sessionId, data) {
+    const player = new Player(data.color)
     player.name = sessionId
     this.add(player)
     this.players.set(sessionId, player)

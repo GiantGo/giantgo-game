@@ -99,19 +99,20 @@ class Character {
       { eventName: 'keyup' }
     )
 
-    // document.addEventListener('mouseup', () => {
-    //   this.shot()
-    // })
-
     this.loadModel()
   }
 
   loadModel() {
     // RIGID BODY
-    let bodyDesc = RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(-5, 2.4, -0.5)
+    let bodyDesc = RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(
+      this.player.position.x,
+      this.player.position.y,
+      this.player.position.z
+    )
     this.rigidBody = this.engine.world.createRigidBody(bodyDesc)
     let dynamicCollider = RAPIER.ColliderDesc.capsule(CONTROLLER_BODY_RADIUS, CONTROLLER_BODY_RADIUS)
     this.collider = this.engine.world.createCollider(dynamicCollider, this.rigidBody)
+    this.updateCameraTarget(new THREE.Vector3(0, 1, 5))
   }
 
   animate() {

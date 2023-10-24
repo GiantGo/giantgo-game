@@ -2,10 +2,9 @@ import * as THREE from 'three'
 import * as Colyseus from 'colyseus.js' // not necessary if included via <script> tag.
 
 class Client extends THREE.EventDispatcher {
-  constructor(players) {
+  constructor() {
     super()
 
-    this.players = players
     this.load()
   }
 
@@ -16,22 +15,15 @@ class Client extends THREE.EventDispatcher {
     this.room.state.players.onAdd((player, sessionId) => {
       const isMe = this.room.sessionId === sessionId
 
-      console.log('player joined', sessionId, isMe)
-
-      if (!isMe) {
-        this.players.addPlayer(sessionId)
-      }
+      this.dispatchEvent({ type: 'add_player', sessionId, data: player, isMe })
 
       player.onChange(() => {
-        if (!isMe) {
-          this.players.updatePlayer(sessionId, player)
-        }
+        this.dispatchEvent({ type: 'update_player', sessionId, data: player, isMe })
       })
     })
 
     this.room.state.players.onRemove((player, sessionId) => {
-      this.players.removePlayer(sessionId)
-      console.log('player left', sessionId)
+      this.dispatchEvent({ type: 'remove_player', sessionId })
     })
   }
 }
