@@ -1,11 +1,12 @@
 import * as THREE from 'three'
 import { onKeyStroke } from '@vueuse/core'
+import { convertClientData } from '@/utils/transform'
 
 class Character {
   constructor(engine, player) {
     this.engine = engine
     this.player = player
-    this.runVelocity = 4
+    this.speed = 4
     this.velocity = new THREE.Vector3()
     this.onFloor = false
     this.walkDirection = new THREE.Vector3()
@@ -36,6 +37,8 @@ class Character {
       ]
     ]
     this.direction = this.directionDic[1][1]
+    // 客户端待确认状态
+    this.pendingSyncs = []
 
     onKeyStroke(
       ['a', 'A', 'ArrowLeft', 'd', 'D', 'ArrowRight', 'w', 'W', 'ArrowUp', 's', 'S', 'ArrowDown'],
@@ -103,7 +106,6 @@ class Character {
 
     this.direction = this.directionDic[row][col]
     this.player.state = this.direction[0] === 'Stop' ? 'Idle' : 'Running'
-    this.player.fadeToAction()
   }
 
   punch() {
@@ -133,13 +135,45 @@ class Character {
     this.engine.controls.target = this.cameraTarget
   }
 
+  applyServer(data) {
+    // 重置为服务器权威状态
+    this.player.position.copy(data.position)
+    this.player.quaternion.copy(data.quaternion)
+    this.player.rigidBody.setTranslation(data.position)
+    this.player.state = data.state
+    this.player.emote = data.emote
+    this.pendingSyncs.forEach((pending) => {
+      if (this.player.state !== 'Death') {
+        this.player.position.copy(pending.position)
+        this.player.quaternion.copy(pending.quaternion)
+        this.player.rigidBody.setTranslation(pending.position)
+        this.player.state = pending.state
+        this.player.emote = pending.emote
+      }
+    })
+    this.pendingSyncs = []
+  }
+
   update(dt) {
+    const translation = this.player.rigidBody.translation()
+    const rotation = this.player.rigidBody.rotation()
+
+    this.updateCameraTarget(this.engine.camera.position.clone().sub(this.player.position))
+    this.player.position.copy(translation)
+    this.player.quaternion.copy(rotation)
     this.player.update(dt)
 
-    this.velocity.x = this.velocity.z =
-      this.direction[0] === 'Stop' || this.player.state === 'Death' ? 0 : this.runVelocity
+    if (this.engine.room) {
+      const json = this.player.toJSON()
+      this.pendingSyncs.push(json)
+      this.engine.room.send('update_player', convertClientData(json))
+    }
+
+    this.velocity.x = this.velocity.z = this.direction[0] === 'Stop' || this.player.state === 'Death' ? 0 : this.speed
     this.velocity.y = THREE.MathUtils.lerp(this.velocity.y, -9.81, 0.05)
     this.walkDirection.x = this.walkDirection.z = 0
+
+    const nextQuaternion = this.player.quaternion.clone()
 
     if (this.direction[0] !== 'Stop') {
       var angleYCameraDirection = Math.atan2(
@@ -151,7 +185,7 @@ class Character {
 
       // rotate model
       this.rotateQuarternion.setFromAxisAngle(this.rotateAngle, angleYCameraDirection + directionOffset)
-      this.player.quaternion.rotateTowards(this.rotateQuarternion, 0.2)
+      nextQuaternion.rotateTowards(this.rotateQuarternion, 0.2)
 
       // calculate direction
       this.engine.camera.getWorldDirection(this.walkDirection)
@@ -159,8 +193,6 @@ class Character {
       this.walkDirection.normalize()
       this.walkDirection.applyAxisAngle(this.rotateAngle, directionOffset)
     }
-
-    const translation = this.player.rigidBody.translation()
 
     if (translation.y < -10) {
       // don't fall below ground
@@ -170,14 +202,6 @@ class Character {
         z: 0
       })
     } else {
-      const cameraPositionOffset = this.engine.camera.position.clone().sub(this.player.position)
-      this.updateCameraTarget(cameraPositionOffset)
-
-      // update model and camera
-      this.player.position.x = translation.x
-      this.player.position.y = translation.y
-      this.player.position.z = translation.z
-
       this.walkDirection.y = 1
       this.walkDirection.multiply(this.velocity.clone().multiplyScalar(dt))
 
@@ -194,15 +218,10 @@ class Character {
         this.velocity.y = 0
       }
 
-      this.player.rigidBody.setNextKinematicTranslation({
-        x: translation.x + correctedMovement.x,
-        y: translation.y + correctedMovement.y,
-        z: translation.z + correctedMovement.z
-      })
+      const nextPosition = new THREE.Vector3().addVectors(translation, correctedMovement)
 
-      if (this.engine.room) {
-        this.engine.room.send('update_player', this.player.toJSON())
-      }
+      this.player.rigidBody.setNextKinematicTranslation(nextPosition)
+      this.player.rigidBody.setNextKinematicRotation(nextQuaternion)
     }
   }
 }

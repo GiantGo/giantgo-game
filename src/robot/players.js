@@ -24,21 +24,7 @@ class Players extends THREE.Group {
   updatePlayer(sessionId, data) {
     const player = this.players.get(sessionId)
     // 应用服务器端状态
-    player.applyServer({
-      state: data.state,
-      emote: data.emote,
-      position: {
-        x: data.positionX,
-        y: data.positionY,
-        z: data.positionZ
-      },
-      quaternion: {
-        x: data.quaternionX,
-        y: data.quaternionY,
-        z: data.quaternionZ,
-        w: data.quaternionW
-      }
-    })
+    player.applyServer(data)
   }
 
   update(dt) {

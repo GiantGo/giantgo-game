@@ -59,8 +59,6 @@ class Player extends THREE.Group {
           this.createEmoteCallback(emotes[i])
         }
 
-        this.fadeToAction()
-
         resolve()
       })
     })
@@ -69,14 +67,12 @@ class Player extends THREE.Group {
   createEmoteCallback(name) {
     this.emotesHandler[name] = () => {
       this.emote = name
-      this.fadeToAction()
       this.mixer.addEventListener('finished', this.restoreStateHandler)
     }
   }
 
   restoreState() {
     this.emote = ''
-    this.fadeToAction()
     this.mixer.removeEventListener('finished', this.restoreStateHandler)
   }
 
@@ -108,13 +104,12 @@ class Player extends THREE.Group {
       .onUpdate((object) => {
         this.position.copy(object.position)
         this.quaternion.copy(object.quaternion)
-        this.rigidBody.setTranslation(data.position)
+        this.rigidBody.setTranslation(object.position)
       })
       .easing(TWEEN.Easing.Linear.None)
       .start()
     this.state = data.state
     this.emote = data.emote
-    this.fadeToAction()
   }
 
   toJSON() {
@@ -128,6 +123,7 @@ class Player extends THREE.Group {
 
   update(dt) {
     if (this.mixer) this.mixer.update(dt)
+    this.fadeToAction()
   }
 }
 

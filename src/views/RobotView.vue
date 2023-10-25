@@ -41,7 +41,7 @@ onMounted(() => {
     engine.addEventListener('add_player', ({ sessionId, data, isMe }) => {
       if (isMe) {
         player = new Player(engine, data.color)
-        player.position.set(data.positionX, data.positionY, data.positionZ)
+        player.position.copy(data.position)
         engine.scene.add(player)
         character = new Character(engine, player)
       } else {
@@ -51,10 +51,14 @@ onMounted(() => {
 
     engine.addEventListener('update_player', ({ sessionId, data, isMe }) => {
       if (isMe) {
-        console.log(data.positionX, data.positionZ)
+        character.applyServer(data)
       } else {
         players.updatePlayer(sessionId, data)
       }
+    })
+
+    engine.addEventListener('update_players', (data) => {
+      console.log(data)
     })
   })
 })

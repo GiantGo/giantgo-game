@@ -35,10 +35,8 @@ class Bullet extends THREE.Group {
     const position = this.rigidBody.translation()
     const rotation = this.rigidBody.rotation()
 
-    this.position.x = position.x
-    this.position.y = position.y
-    this.position.z = position.z
-    this.setRotationFromQuaternion(new THREE.Quaternion(rotation.x, rotation.y, rotation.z, rotation.w))
+    this.position.copy(position)
+    this.quaternion.copy(rotation)
   }
 }
 
