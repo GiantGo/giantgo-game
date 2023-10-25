@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { onKeyStroke } from '@vueuse/core'
 import { convertClientData } from '@/utils/transform'
+import { uuid } from '@/utils/uuid'
 
 class Character {
   constructor(engine, player) {
@@ -111,13 +112,12 @@ class Character {
   punch() {
     const direction = new THREE.Vector3()
     this.player.getWorldDirection(direction)
-    this.engine.dispatchEvent({
-      type: 'punch',
-      dimension: { radius: 0.2 },
+    this.engine.room.send('add_bullet', {
+      bulletId: uuid(8),
       translation: this.player.position.clone().addScaledVector(direction, -1),
-      linvel: new THREE.Vector3().copy(direction).multiplyScalar(-20),
-      color: this.player.color
+      linvel: new THREE.Vector3().copy(direction).multiplyScalar(-20)
     })
+
     this.player.emotesHandler.Punch()
   }
 
@@ -163,7 +163,7 @@ class Character {
     this.player.quaternion.copy(rotation)
     this.player.update(dt)
 
-    if (this.engine.room) {
+    if (this.engine.room && this.player.state !== 'Death') {
       const json = this.player.toJSON()
       this.pendingSyncs.push(json)
       this.engine.room.send('update_player', convertClientData(json))

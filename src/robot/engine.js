@@ -3,24 +3,24 @@ import * as TWEEN from '@tweenjs/tween.js'
 import RAPIER from '@dimforge/rapier3d-compat'
 import * as Colyseus from 'colyseus.js' // not necessary if included via <script> tag.
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
-import { convertServerData } from '@/utils/transform'
 
 class Engine extends THREE.EventDispatcher {
   constructor() {
     super()
     this.clock = new THREE.Clock()
-    this.world = new RAPIER.World({ x: 0.0, y: -9.81, z: 0.0 })
-    this.characterController = this.world.createCharacterController(0.01)
-    this.characterController.setMaxSlopeClimbAngle((45 * Math.PI) / 180)
-    this.characterController.enableAutostep(0.5, 0.2, true)
-    this.characterController.enableSnapToGround(0.5)
+  }
 
+  async init() {
+    await RAPIER.init()
     this.loadScene()
     this.loadCamera()
     this.loadRenderer()
     this.loadControls()
     this.loadLights()
-    this.loadClient()
+    this.loadWorld()
+    await this.loadClient()
+
+    this.update()
 
     window.addEventListener('resize', this.onWindowResize.bind(this))
   }
@@ -80,29 +80,17 @@ class Engine extends THREE.EventDispatcher {
     this.scene.add(dirLight)
   }
 
-  loadClient() {
+  loadWorld() {
+    this.world = new RAPIER.World({ x: 0.0, y: -9.81, z: 0.0 })
+    this.characterController = this.world.createCharacterController(0.01)
+    this.characterController.setMaxSlopeClimbAngle((45 * Math.PI) / 180)
+    this.characterController.enableAutostep(0.5, 0.2, true)
+    this.characterController.enableSnapToGround(0.5)
+  }
+
+  async loadClient() {
     this.client = new Colyseus.Client('ws://localhost:2567/test/server')
-    this.client.joinOrCreate('my_room').then((room) => {
-      this.room = room
-
-      this.room.state.players.onAdd((player, sessionId) => {
-        const isMe = this.room.sessionId === sessionId
-
-        this.dispatchEvent({ type: 'add_player', sessionId, data: convertServerData(player), isMe })
-
-        player.onChange(() => {
-          this.dispatchEvent({ type: 'update_player', sessionId, data: convertServerData(player), isMe })
-        })
-      })
-
-      this.room.state.players.onRemove((player, sessionId) => {
-        this.dispatchEvent({ type: 'remove_player', sessionId })
-      })
-
-      this.room.onMessage('update_players', (data) => {
-        this.dispatchEvent({ type: 'update_players', data })
-      })
-    })
+    this.room = await this.client.joinOrCreate('my_room')
   }
 
   onWindowResize() {

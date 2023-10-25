@@ -7,6 +7,14 @@ class Bullets extends THREE.Group {
 
     this.engine = engine
     this.bullets = []
+
+    this.engine.room.state.bullets.onAdd((bullet, bulletId) => {
+      this.addBullet(bullet)
+    })
+
+    this.engine.room.state.bullets.onRemove((bullet, sessionId) => {
+      console.log(bullet, sessionId)
+    })
   }
 
   addBullet(args) {

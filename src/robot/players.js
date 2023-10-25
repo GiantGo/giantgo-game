@@ -1,5 +1,7 @@
 import * as THREE from 'three'
 import { Player } from './player'
+import { Character } from '../robot/character'
+import { convertServerData } from '@/utils/transform'
 
 class Players extends THREE.Group {
   constructor(engine) {
@@ -7,6 +9,33 @@ class Players extends THREE.Group {
 
     this.engine = engine
     this.players = new Map()
+
+    this.engine.room.state.players.onAdd((player, sessionId) => {
+      const isMe = this.engine.room.sessionId === sessionId
+      const data = convertServerData(player)
+
+      if (isMe) {
+        const myPlayer = new Player(engine, data.color)
+        myPlayer.position.copy(data.position)
+        engine.scene.add(myPlayer)
+        this.character = new Character(engine, myPlayer)
+      } else {
+        this.addPlayer(sessionId, data)
+      }
+
+      player.onChange(() => {
+        const data = convertServerData(player)
+        if (isMe) {
+          this.character.applyServer(data)
+        } else {
+          this.updatePlayer(sessionId, data)
+        }
+      })
+    })
+
+    this.engine.room.state.players.onRemove((player, sessionId) => {
+      this.removePlayer(sessionId)
+    })
   }
 
   addPlayer(sessionId, data) {
@@ -28,6 +57,7 @@ class Players extends THREE.Group {
   }
 
   update(dt) {
+    this.character && this.character.update(dt)
     this.players.forEach((player) => {
       player.update(dt)
     })

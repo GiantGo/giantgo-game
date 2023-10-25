@@ -10,21 +10,21 @@ class Bullet extends THREE.Group {
     this.loadModel(args)
   }
 
-  loadModel({ dimension, translation, linvel, color }) {
+  loadModel({ radius, translation, linvel, color }) {
     let bodyDesc = RAPIER.RigidBodyDesc.dynamic()
 
-    bodyDesc.setLinvel(linvel.x, linvel.y, linvel.z)
+    bodyDesc.setLinvel(linvel.x, 10, linvel.z)
 
     if (translation) {
       bodyDesc.setTranslation(translation.x, translation.y, translation.z)
     }
 
     this.rigidBody = this.engine.world.createRigidBody(bodyDesc)
-    let collider = RAPIER.ColliderDesc.ball(dimension.radius).setMass(0.8)
+    let collider = RAPIER.ColliderDesc.ball(radius)
 
     this.engine.world.createCollider(collider, this.rigidBody)
 
-    let bufferGeometry = new THREE.SphereGeometry(dimension.radius, 32, 32)
+    let bufferGeometry = new THREE.SphereGeometry(radius, 32, 32)
 
     const mesh = new THREE.Mesh(bufferGeometry, new THREE.MeshPhongMaterial({ color: color }))
 
