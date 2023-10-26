@@ -3,9 +3,9 @@ import * as TWEEN from '@tweenjs/tween.js'
 import RAPIER from '@dimforge/rapier3d-compat'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 
-const states = ['Idle', 'Walking', 'Running', 'Dance', 'Death', 'Sitting', 'Standing']
-const emotes = ['Jump', 'Yes', 'No', 'Wave', 'Punch', 'ThumbsUp']
-const CONTROLLER_BODY_RADIUS = 0.25
+const states = ['Idle', 'Running', 'RunningBack', 'Death']
+const emotes = ['Jump', 'Punch']
+const CONTROLLER_BODY_RADIUS = 0.4
 
 class Player extends THREE.Group {
   constructor(engine, color) {
@@ -28,16 +28,13 @@ class Player extends THREE.Group {
   loadModel() {
     return new Promise((resolve) => {
       const loader = new GLTFLoader()
-      loader.load('./robot/Robot.glb', (gltf) => {
+      loader.load('./robot/Bot.glb', (gltf) => {
         this.model = gltf.scene
-        this.model.scale.set(0.2, 0.2, 0.2)
-        this.model.translateY(-0.5)
+        this.model.scale.set(0.01, 0.01, 0.01)
 
         this.model.traverse((child) => {
           if (child.isMesh) {
-            if (child.material.name === 'Main') {
-              child.material.color = this.color
-            }
+            child.material.color = this.color
           }
         })
 
@@ -49,7 +46,7 @@ class Player extends THREE.Group {
           const action = this.mixer.clipAction(clip)
           this.actions[clip.name] = action
 
-          if (emotes.indexOf(clip.name) >= 0 || states.indexOf(clip.name) >= 4) {
+          if (emotes.indexOf(clip.name) > -1 || states.indexOf(clip.name) >= 3) {
             action.clampWhenFinished = true
             action.loop = THREE.LoopOnce
           }
@@ -91,7 +88,7 @@ class Player extends THREE.Group {
   loadRigidBody() {
     let bodyDesc = RAPIER.RigidBodyDesc.kinematicPositionBased()
     this.rigidBody = this.engine.world.createRigidBody(bodyDesc)
-    let dynamicCollider = RAPIER.ColliderDesc.capsule(CONTROLLER_BODY_RADIUS, CONTROLLER_BODY_RADIUS)
+    let dynamicCollider = RAPIER.ColliderDesc.capsule(0.7, CONTROLLER_BODY_RADIUS)
     this.collider = this.engine.world.createCollider(dynamicCollider, this.rigidBody)
   }
 
@@ -123,6 +120,7 @@ class Player extends THREE.Group {
 
   update(dt) {
     if (this.mixer) this.mixer.update(dt)
+    if (this.mixer1) this.mixer1.update(dt)
     this.fadeToAction()
   }
 }

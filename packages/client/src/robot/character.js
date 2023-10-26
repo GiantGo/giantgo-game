@@ -3,43 +3,41 @@ import { onKeyStroke } from '@vueuse/core'
 import { convertClientData } from '@/utils/transform'
 import { uuid } from '@/utils/uuid'
 
-const directionDic = [
-  [
-    ['LeftUp', Math.PI / 4],
-    ['Up', 0],
-    ['RightUp', -Math.PI / 4]
-  ],
-  [
-    ['Left', Math.PI / 2],
-    ['Stop', 0],
-    ['Right', -Math.PI / 2]
-  ],
-  [
-    ['LeftDown', Math.PI / 4 + Math.PI / 2],
-    ['Down', Math.PI],
-    ['RightDown', -Math.PI / 4 - Math.PI / 2]
-  ]
-]
-
 class Character {
   constructor(engine, player) {
     this.engine = engine
     this.player = player
-    this.speed = 4
+    this.speed = 8
     this.velocity = new THREE.Vector3()
     this.onFloor = false
     this.walkDirection = new THREE.Vector3()
     this.rotateAngle = new THREE.Vector3(0, 1, 0)
     this.rotateQuarternion = new THREE.Quaternion()
     this.cameraTarget = new THREE.Vector3()
-    this.directions = {
+    this.keyStroke = {
       w: false,
       a: false,
       s: false,
       d: false
     }
-
-    this.direction = directionDic[1][1]
+    this.directionDic = [
+      [
+        ['LeftUp', 'Running', this.speed, Math.PI / 4],
+        ['Up', 'Running', this.speed, 0],
+        ['RightUp', 'Running', this.speed, -Math.PI / 4]
+      ],
+      [
+        ['Left', 'Running', this.speed, Math.PI / 2],
+        ['Stop', 'Idle', 0, 0],
+        ['Right', 'Running', this.speed, -Math.PI / 2]
+      ],
+      [
+        ['LeftDown', 'RunningBack', -this.speed * 0.6, -Math.PI / 4],
+        ['Down', 'RunningBack', -this.speed * 0.6, 0],
+        ['RightDown', 'RunningBack', -this.speed * 0.6, Math.PI / 4]
+      ]
+    ]
+    this.direction = this.directionDic[1][1]
     // 客户端待确认状态
     this.pendingSyncs = []
 
@@ -47,10 +45,10 @@ class Character {
       ['a', 'A', 'ArrowLeft', 'd', 'D', 'ArrowRight', 'w', 'W', 'ArrowUp', 's', 'S', 'ArrowDown'],
       (e) => {
         e.preventDefault()
-        this.directions.a = ['a', 'A', 'ArrowLeft'].includes(e.key) ? true : this.directions.a
-        this.directions.d = ['d', 'D', 'ArrowRight'].includes(e.key) ? true : this.directions.d
-        this.directions.w = ['w', 'W', 'ArrowUp'].includes(e.key) ? true : this.directions.w
-        this.directions.s = ['s', 'S', 'ArrowDown'].includes(e.key) ? true : this.directions.s
+        this.keyStroke.a = ['a', 'A', 'ArrowLeft'].includes(e.key) ? true : this.keyStroke.a
+        this.keyStroke.d = ['d', 'D', 'ArrowRight'].includes(e.key) ? true : this.keyStroke.d
+        this.keyStroke.w = ['w', 'W', 'ArrowUp'].includes(e.key) ? true : this.keyStroke.w
+        this.keyStroke.s = ['s', 'S', 'ArrowDown'].includes(e.key) ? true : this.keyStroke.s
       },
       { eventName: 'keydown', dedupe: true }
     )
@@ -59,10 +57,10 @@ class Character {
       ['a', 'A', 'ArrowLeft', 'd', 'D', 'ArrowRight', 'w', 'W', 'ArrowUp', 's', 'S', 'ArrowDown'],
       (e) => {
         e.preventDefault()
-        this.directions.a = ['a', 'A', 'ArrowLeft'].includes(e.key) ? false : this.directions.a
-        this.directions.d = ['d', 'D', 'ArrowRight'].includes(e.key) ? false : this.directions.d
-        this.directions.w = ['w', 'W', 'ArrowUp'].includes(e.key) ? false : this.directions.w
-        this.directions.s = ['s', 'S', 'ArrowDown'].includes(e.key) ? false : this.directions.s
+        this.keyStroke.a = ['a', 'A', 'ArrowLeft'].includes(e.key) ? false : this.keyStroke.a
+        this.keyStroke.d = ['d', 'D', 'ArrowRight'].includes(e.key) ? false : this.keyStroke.d
+        this.keyStroke.w = ['w', 'W', 'ArrowUp'].includes(e.key) ? false : this.keyStroke.w
+        this.keyStroke.s = ['s', 'S', 'ArrowDown'].includes(e.key) ? false : this.keyStroke.s
       },
       { eventName: 'keyup' }
     )
@@ -79,31 +77,27 @@ class Character {
       { eventName: 'keydown', dedupe: true }
     )
 
-    onKeyStroke(
-      ['j', 'J', '1'],
-      (e) => {
-        e.preventDefault()
-        if (this.player.emote !== 'Punch' && this.player.state !== 'Death') {
-          this.punch()
-        }
-      },
-      { eventName: 'keyup' }
-    )
+    window.addEventListener('pointerdown', () => {
+      if (this.player.emote !== 'Punch' && this.player.state !== 'Death') {
+        this.punch()
+      }
+    })
 
     this.player.rigidBody.setTranslation(this.player.position)
     this.updateCameraTarget(new THREE.Vector3(0, 1, 5))
   }
 
   punch() {
-    const direction = new THREE.Vector3()
-    this.player.getWorldDirection(direction)
-    this.engine.room.send('punch', {
-      bulletId: uuid(8),
-      position: this.player.position.clone().addScaledVector(direction, -1),
-      linvel: new THREE.Vector3().copy(direction).multiplyScalar(-20)
-    })
-
     this.player.emotesHandler.Punch()
+    window.setTimeout(() => {
+      const direction = new THREE.Vector3()
+      this.player.getWorldDirection(direction)
+      this.engine.room.send('punch', {
+        bulletId: uuid(8),
+        position: this.player.position.clone().addScaledVector(direction, -1),
+        linvel: new THREE.Vector3().copy(direction).multiplyScalar(-20)
+      })
+    }, 50)
   }
 
   updateCameraTarget(offset) {
@@ -143,11 +137,11 @@ class Character {
     let col = 1
     let row = 1
 
-    col += this.directions.a ? -1 : 0
-    col += this.directions.d ? 1 : 0
-    row += this.directions.w ? -1 : 0
-    row += this.directions.s ? 1 : 0
-    this.direction = directionDic[row][col]
+    col += this.keyStroke.a ? -1 : 0
+    col += this.keyStroke.d ? 1 : 0
+    row += this.keyStroke.w ? -1 : 0
+    row += this.keyStroke.s ? 1 : 0
+    this.direction = this.directionDic[row][col]
 
     const translation = this.player.rigidBody.translation()
     const rotation = this.player.rigidBody.rotation()
@@ -155,7 +149,7 @@ class Character {
     this.updateCameraTarget(this.engine.camera.position.clone().sub(this.player.position))
     this.player.position.copy(translation)
     this.player.quaternion.copy(rotation)
-    this.player.state = this.direction[0] === 'Stop' ? 'Idle' : 'Running'
+    this.player.state = this.direction[1]
   }
 
   sendServer() {
@@ -169,29 +163,28 @@ class Character {
   setNextKinematic(dt) {
     const translation = this.player.rigidBody.translation()
     const nextQuaternion = this.player.quaternion.clone()
+    const speed = this.direction[2]
 
-    this.velocity.x = this.velocity.z = this.direction[0] === 'Stop' ? 0 : this.speed
+    this.velocity.x = this.velocity.z = speed
     this.velocity.y = THREE.MathUtils.lerp(this.velocity.y, -9.81, 0.05)
     this.walkDirection.x = this.walkDirection.z = 0
 
-    if (this.direction[0] !== 'Stop') {
-      var angleYCameraDirection = Math.atan2(
-        this.engine.camera.position.x - this.player.position.x,
-        this.engine.camera.position.z - this.player.position.z
-      )
-      // diagonal movement angle offset
-      var directionOffset = this.direction[1]
+    const angleYCameraDirection = Math.atan2(
+      this.engine.camera.position.x - this.player.position.x,
+      this.engine.camera.position.z - this.player.position.z
+    )
+    // diagonal movement angle offset
+    const directionOffset = this.direction[3]
 
-      // rotate model
-      this.rotateQuarternion.setFromAxisAngle(this.rotateAngle, angleYCameraDirection + directionOffset)
-      nextQuaternion.rotateTowards(this.rotateQuarternion, 0.2)
+    // rotate model
+    this.rotateQuarternion.setFromAxisAngle(this.rotateAngle, angleYCameraDirection + directionOffset)
+    nextQuaternion.rotateTowards(this.rotateQuarternion, 0.2)
 
-      // calculate direction
-      this.engine.camera.getWorldDirection(this.walkDirection)
-      this.walkDirection.y = 0
-      this.walkDirection.normalize()
-      this.walkDirection.applyAxisAngle(this.rotateAngle, directionOffset)
-    }
+    // calculate direction
+    this.engine.camera.getWorldDirection(this.walkDirection)
+    this.walkDirection.y = 0
+    this.walkDirection.normalize()
+    this.walkDirection.applyAxisAngle(this.rotateAngle, directionOffset)
 
     if (translation.y < -10) {
       // don't fall below ground

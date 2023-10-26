@@ -24,7 +24,7 @@ class Engine extends THREE.EventDispatcher {
 
     window.addEventListener('resize', this.onWindowResize.bind(this))
     window.addEventListener('click', () => {
-      this.controls.lock()
+      import.meta.env.PROD && this.controls.lock()
     })
   }
 

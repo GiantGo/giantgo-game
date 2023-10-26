@@ -680,7 +680,7 @@ class OrbitControls extends EventDispatcher {
             const movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
 	        const movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
 
-            rotateEnd.set( event.clientX, event.clientY );
+			rotateEnd.set( event.clientX, event.clientY );
 
 			rotateDelta.set(movementX, movementY).multiplyScalar( scope.rotateSpeed );
 
@@ -990,7 +990,7 @@ class OrbitControls extends EventDispatcher {
 
 			if ( pointers.length === 0 ) {
 
-				scope.domElement.setPointerCapture( event.pointerId );
+				// scope.domElement.setPointerCapture( event.pointerId );
 
 				// scope.domElement.addEventListener( 'pointermove', onPointerMove );
 				scope.domElement.addEventListener( 'pointerup', onPointerUp );
@@ -1178,8 +1178,6 @@ class OrbitControls extends EventDispatcher {
 
 					handleMouseMoveRotate( event );
 
-					break;
-
 			}
 
 		}
@@ -1207,7 +1205,6 @@ class OrbitControls extends EventDispatcher {
 		}
 
 		function onTouchStart( event ) {
-            console.log(event.pageX)
 
 			trackPointer( event );
 
@@ -1403,8 +1400,6 @@ class OrbitControls extends EventDispatcher {
 
 		scope.domElement.addEventListener( 'contextmenu', onContextMenu );
         scope.domElement.addEventListener( 'pointermove', onPointerMove );
-        // scope.domElement.addEventListener( 'pointerdown', onTouchStart );
-        // scope.domElement.addEventListener( 'touchmove', onTouchMove );
 		scope.domElement.addEventListener( 'pointerdown', onPointerDown );
 		scope.domElement.addEventListener( 'pointercancel', onPointerUp );
 		scope.domElement.addEventListener( 'wheel', onMouseWheel, { passive: false } );
