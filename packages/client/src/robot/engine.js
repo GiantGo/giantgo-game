@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import * as TWEEN from '@tweenjs/tween.js'
 import RAPIER from '@dimforge/rapier3d-compat'
 import * as Colyseus from 'colyseus.js' // not necessary if included via <script> tag.
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import { OrbitControls } from './controls.js'
 
 class Engine extends THREE.EventDispatcher {
   constructor() {
@@ -23,6 +23,9 @@ class Engine extends THREE.EventDispatcher {
     this.update()
 
     window.addEventListener('resize', this.onWindowResize.bind(this))
+    window.addEventListener('click', () => {
+      this.controls.lock()
+    })
   }
 
   loadScene() {
