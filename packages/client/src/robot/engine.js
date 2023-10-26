@@ -89,7 +89,7 @@ class Engine extends THREE.EventDispatcher {
   }
 
   async loadClient() {
-    this.client = new Colyseus.Client('ws://localhost:2567/test/server')
+    this.client = new Colyseus.Client(import.meta.env.VITE_BASE_URL)
     this.room = await this.client.joinOrCreate('my_room')
   }
 

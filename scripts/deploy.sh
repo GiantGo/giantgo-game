@@ -9,23 +9,15 @@ rm -rf dist
 pnpm i
 
 # 构建
-
 pnpm run build
 
-# cd 到构建输出的目录下 
-cd dist
+mkdir dist
+mkdir dist/client
+mkdir dist/server
+mkdir dist/server/build
 
-# 部署到自定义域域名
-# echo 'www.example.com' > CNAME
-
-git init
-git add -A
-git commit -m 'deploy'
-
-# 部署到 https://<USERNAME>.github.io
-# git push -f git@github.com:<USERNAME>/<USERNAME>.github.io.git master
-
-# 部署到 https://<USERNAME>.github.io/<REPO>
-git push -f git@github.com:GiantGo/giantgo-game.git master:gh-pages
-
-cd -
+mv packages/client/dist dist/client
+mv packages/server/build dist/server
+cp packages/server/ecosystem.config.js dist/server/ecosystem.config.js
+cp packages/server/package.json dist/server/package.json
+cp packages/server/package-lock.json dist/server/package-lock.json
