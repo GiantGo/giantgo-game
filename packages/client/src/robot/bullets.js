@@ -8,6 +8,10 @@ class Bullets extends THREE.Group {
     this.engine = engine
     this.bullets = []
 
+    this.engine.addEventListener('room_ready', () => this.roomReady())
+  }
+
+  roomReady() {
     this.engine.room.state.bullets.onAdd((bullet, bulletId) => {
       this.addBullet(bullet, bulletId)
     })

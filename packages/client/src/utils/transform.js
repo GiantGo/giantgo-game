@@ -1,8 +1,6 @@
 export function convertServerData(data) {
   return {
-    state: data.state,
-    emote: data.emote,
-    color: data.color,
+    ...data,
     position: {
       x: data.positionX,
       y: data.positionY,

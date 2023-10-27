@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { onKeyStroke } from '@vueuse/core'
 import { convertClientData } from '@/utils/transform'
-import { uuid } from '@/utils/uuid'
+import { uuid } from '@/utils'
 
 class Character {
   constructor(engine, player) {
@@ -92,12 +92,12 @@ class Character {
     window.setTimeout(() => {
       const direction = new THREE.Vector3()
       this.player.getWorldDirection(direction)
-      this.engine.room.send('punch', {
+      this.engine.sendRoom('punch', {
         bulletId: uuid(8),
         position: this.player.position.clone().addScaledVector(direction, -1),
         linvel: new THREE.Vector3().copy(direction).multiplyScalar(-20)
       })
-    }, 50)
+    }, 200)
   }
 
   updateCameraTarget(offset) {
@@ -153,11 +153,9 @@ class Character {
   }
 
   sendServer() {
-    if (this.engine.room) {
-      const json = this.player.toJSON()
-      this.pendingSyncs.push(json)
-      this.engine.room.send('update_player', convertClientData(json))
-    }
+    const json = this.player.toJSON()
+    this.pendingSyncs.push(json)
+    this.engine.sendRoom('update_player', convertClientData(json))
   }
 
   setNextKinematic(dt) {

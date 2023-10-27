@@ -27,3 +27,7 @@ export function uuid(len, radix) {
 
   return uuid.join('')
 }
+
+export function random(lower = 0, upper = 255) {
+  return Math.floor(Math.random() * (upper - lower)) + lower
+}

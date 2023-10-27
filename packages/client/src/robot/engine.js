@@ -3,10 +3,14 @@ import * as TWEEN from '@tweenjs/tween.js'
 import RAPIER from '@dimforge/rapier3d-compat'
 import * as Colyseus from 'colyseus.js' // not necessary if included via <script> tag.
 import { OrbitControls } from './controls.js'
+import { uuid, random } from '@/utils'
 
 class Engine extends THREE.EventDispatcher {
   constructor() {
     super()
+
+    this.clientId = uuid(8)
+    this.color = `rgb(${random()}, ${random()}, ${random()})`
     this.clock = new THREE.Clock()
   }
 
@@ -18,8 +22,7 @@ class Engine extends THREE.EventDispatcher {
     this.loadControls()
     this.loadLights()
     this.loadWorld()
-    await this.loadClient()
-
+    this.loadClient()
     this.update()
 
     window.addEventListener('resize', this.onWindowResize.bind(this))
@@ -92,8 +95,31 @@ class Engine extends THREE.EventDispatcher {
   }
 
   async loadClient() {
-    this.client = new Colyseus.Client(import.meta.env.VITE_BASE_URL)
-    this.room = await this.client.joinOrCreate('my_room')
+    let retryCount = 0
+
+    const connect = async () => {
+      try {
+        retryCount++
+        this.client = new Colyseus.Client(import.meta.env.VITE_BASE_URL)
+        this.room = await this.client.joinOrCreate('my_room', { clientId: this.clientId, color: this.color })
+        this.room.onLeave((code) => {
+          console.log('断开连接，错误码：' + code)
+          this.room = null
+          this.loadClient()
+        })
+        this.dispatchEvent({ type: 'room_ready' })
+      } catch (e) {
+        console.log(e, `${retryCount} retry`)
+        setTimeout(connect, 2000)
+      }
+    }
+
+    await connect()
+  }
+
+  // 发送消息到room
+  sendRoom(type, data) {
+    this.room && this.room.send(type, data)
   }
 
   onWindowResize() {

@@ -92,6 +92,7 @@ class Player extends THREE.Group {
     this.collider = this.engine.world.createCollider(dynamicCollider, this.rigidBody)
   }
 
+  // 应用服务器端状态
   applyServer(data) {
     this.tween = new TWEEN.Tween({
       position: this.position,

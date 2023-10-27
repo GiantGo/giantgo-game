@@ -22,8 +22,9 @@ export class Bullet extends Schema {
 }
 
 export class Player extends Schema {
-  @type('string') public state = 'Idle'
-  @type('string') public emote = ''
+  @type('string') clientId = ''
+  @type('string') state = 'Idle'
+  @type('string') emote = ''
   @type('string') color = ''
   @type('number') positionX: number = 0
   @type('number') positionY: number = 0
@@ -37,5 +38,5 @@ export class Player extends Schema {
 
 export class RoomState extends Schema {
   @type({ map: Player }) public players = new MapSchema<Player>()
-  @type({ map: Bullet }) bullets = new MapSchema<Bullet>()
+  @type({ map: Bullet }) public bullets = new MapSchema<Bullet>()
 }

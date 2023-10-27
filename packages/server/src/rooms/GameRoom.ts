@@ -21,8 +21,8 @@ export class GameRoom extends Room<RoomState> {
   }
 
   public onJoin(client: Client, options: any) {
-    console.log(client.sessionId, 'joined!')
-    this.addPlayer(client)
+    console.log(client.sessionId, 'joined!', options)
+    this.addPlayer(client, options)
   }
 
   public onLeave(client: Client, consented: boolean) {
@@ -34,12 +34,13 @@ export class GameRoom extends Room<RoomState> {
     console.log('room', this.roomId, 'disposing...')
   }
 
-  addPlayer(client: Client) {
+  addPlayer(client: Client, data: any) {
     const player = new Player()
+    player.clientId = data.clientId
+    player.color = data.color
     player.positionX = Math.random() * 60 - 35
     player.positionZ = Math.random() * 60 - 50
     player.positionY = 10
-    player.color = `rgb(${random()}, ${random()}, ${random()})`
     this.state.players.set(client.sessionId, player)
   }
 
