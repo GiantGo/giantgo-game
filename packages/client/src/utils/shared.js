@@ -31,3 +31,11 @@ export function uuid(len, radix) {
 export function random(lower = 0, upper = 255) {
   return Math.floor(Math.random() * (upper - lower)) + lower
 }
+
+export function isMobile() {
+  if (navigator.userAgent.match(/(iPhone|iPod|Android|ios|iOS|iPad|Backerry|WebOS|Symbian|Windows Phone|Phone)/i)) {
+    return true
+  } else {
+    return false
+  }
+}

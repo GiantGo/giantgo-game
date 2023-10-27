@@ -3,7 +3,7 @@ import * as TWEEN from '@tweenjs/tween.js'
 import RAPIER from '@dimforge/rapier3d-compat'
 import * as Colyseus from 'colyseus.js' // not necessary if included via <script> tag.
 import { OrbitControls } from './controls.js'
-import { uuid, random } from '@/utils'
+import { uuid, random, isMobile } from '@/utils'
 
 class Engine extends THREE.EventDispatcher {
   constructor() {
@@ -11,6 +11,7 @@ class Engine extends THREE.EventDispatcher {
 
     this.clientId = uuid(8)
     this.color = `rgb(${random()}, ${random()}, ${random()})`
+    this.isMobile = isMobile()
     this.clock = new THREE.Clock()
   }
 

@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import nipplejs from 'nipplejs'
 import { onKeyStroke } from '@vueuse/core'
 import { convertClientData } from '@/utils/transform'
 import { uuid } from '@/utils'
@@ -41,63 +42,104 @@ class Character {
     // 客户端待确认状态
     this.pendingSyncs = []
 
-    onKeyStroke(
-      ['a', 'A', 'ArrowLeft', 'd', 'D', 'ArrowRight', 'w', 'W', 'ArrowUp', 's', 'S', 'ArrowDown'],
-      (e) => {
-        e.preventDefault()
-        this.keyStroke.a = ['a', 'A', 'ArrowLeft'].includes(e.key) ? true : this.keyStroke.a
-        this.keyStroke.d = ['d', 'D', 'ArrowRight'].includes(e.key) ? true : this.keyStroke.d
-        this.keyStroke.w = ['w', 'W', 'ArrowUp'].includes(e.key) ? true : this.keyStroke.w
-        this.keyStroke.s = ['s', 'S', 'ArrowDown'].includes(e.key) ? true : this.keyStroke.s
-      },
-      { eventName: 'keydown', dedupe: true }
-    )
-
-    onKeyStroke(
-      ['a', 'A', 'ArrowLeft', 'd', 'D', 'ArrowRight', 'w', 'W', 'ArrowUp', 's', 'S', 'ArrowDown'],
-      (e) => {
-        e.preventDefault()
-        this.keyStroke.a = ['a', 'A', 'ArrowLeft'].includes(e.key) ? false : this.keyStroke.a
-        this.keyStroke.d = ['d', 'D', 'ArrowRight'].includes(e.key) ? false : this.keyStroke.d
-        this.keyStroke.w = ['w', 'W', 'ArrowUp'].includes(e.key) ? false : this.keyStroke.w
-        this.keyStroke.s = ['s', 'S', 'ArrowDown'].includes(e.key) ? false : this.keyStroke.s
-      },
-      { eventName: 'keyup' }
-    )
-
-    onKeyStroke(
-      ' ',
-      (e) => {
-        e.preventDefault()
-        if (this.onFloor && this.player.state !== 'Death') {
-          this.velocity.y = 15
-          this.player.emotesHandler.Jump()
-        }
-      },
-      { eventName: 'keydown', dedupe: true }
-    )
-
-    window.addEventListener('pointerdown', () => {
-      if (this.player.emote !== 'Punch' && this.player.state !== 'Death') {
-        this.punch()
-      }
-    })
-
     this.player.rigidBody.setTranslation(this.player.position)
     this.updateCameraTarget(new THREE.Vector3(0, 1, 5))
+
+    this.loadControl()
+  }
+
+  loadControl() {
+    if (this.engine.isMobile) {
+      let joyManager
+
+      joyManager = nipplejs.create({
+        zone: document.getElementById('joystickWrapper1'),
+        size: 120,
+        multitouch: true,
+        maxNumberOfNipples: 2,
+        mode: 'static',
+        restJoystick: true,
+        shape: 'circle',
+        // position: { top: 20, left: 20 },
+        position: { top: '60px', left: '60px' },
+        dynamicPage: true
+      })
+
+      joyManager['0'].on('move', (evt, data) => {
+        const { degree } = data.angle
+        this.keyStroke.w = degree < 157.5 && degree > 22.5
+        this.keyStroke.a = degree < 247.5 && degree > 112.5
+        this.keyStroke.s = degree < 337.5 && degree > 202.5
+        this.keyStroke.d = degree < 67.5 || degree > 292.5
+      })
+
+      joyManager['0'].on('end', () => {
+        this.keyStroke.a = false
+        this.keyStroke.d = false
+        this.keyStroke.w = false
+        this.keyStroke.s = false
+      })
+
+      document.getElementById('punchButton').onclick = () => this.punch()
+      document.getElementById('jumpButton').onclick = () => this.jump()
+    } else {
+      onKeyStroke(
+        ['a', 'A', 'ArrowLeft', 'd', 'D', 'ArrowRight', 'w', 'W', 'ArrowUp', 's', 'S', 'ArrowDown'],
+        (e) => {
+          e.preventDefault()
+          this.keyStroke.a = ['a', 'A', 'ArrowLeft'].includes(e.key) ? true : this.keyStroke.a
+          this.keyStroke.d = ['d', 'D', 'ArrowRight'].includes(e.key) ? true : this.keyStroke.d
+          this.keyStroke.w = ['w', 'W', 'ArrowUp'].includes(e.key) ? true : this.keyStroke.w
+          this.keyStroke.s = ['s', 'S', 'ArrowDown'].includes(e.key) ? true : this.keyStroke.s
+        },
+        { eventName: 'keydown', dedupe: true }
+      )
+
+      onKeyStroke(
+        ['a', 'A', 'ArrowLeft', 'd', 'D', 'ArrowRight', 'w', 'W', 'ArrowUp', 's', 'S', 'ArrowDown'],
+        (e) => {
+          e.preventDefault()
+          this.keyStroke.a = ['a', 'A', 'ArrowLeft'].includes(e.key) ? false : this.keyStroke.a
+          this.keyStroke.d = ['d', 'D', 'ArrowRight'].includes(e.key) ? false : this.keyStroke.d
+          this.keyStroke.w = ['w', 'W', 'ArrowUp'].includes(e.key) ? false : this.keyStroke.w
+          this.keyStroke.s = ['s', 'S', 'ArrowDown'].includes(e.key) ? false : this.keyStroke.s
+        },
+        { eventName: 'keyup' }
+      )
+
+      onKeyStroke(
+        ' ',
+        (e) => {
+          e.preventDefault()
+          this.jump()
+        },
+        { eventName: 'keydown', dedupe: true }
+      )
+
+      this.engine.renderer.domElement.addEventListener('pointerdown', () => this.punch())
+    }
   }
 
   punch() {
-    this.player.emotesHandler.Punch()
-    window.setTimeout(() => {
-      const direction = new THREE.Vector3()
-      this.player.getWorldDirection(direction)
-      this.engine.sendRoom('punch', {
-        bulletId: uuid(8),
-        position: this.player.position.clone().addScaledVector(direction, -1),
-        linvel: new THREE.Vector3().copy(direction).multiplyScalar(-20)
-      })
-    }, 200)
+    if (this.player.emote !== 'Punch' && this.player.state !== 'Death') {
+      this.player.emotesHandler.Punch()
+      window.setTimeout(() => {
+        const direction = new THREE.Vector3()
+        this.player.getWorldDirection(direction)
+        this.engine.sendRoom('punch', {
+          bulletId: uuid(8),
+          position: this.player.position.clone().addScaledVector(direction, -1),
+          linvel: new THREE.Vector3().copy(direction).multiplyScalar(-20)
+        })
+      }, 200)
+    }
+  }
+
+  jump() {
+    if (this.onFloor && this.player.state !== 'Death') {
+      this.velocity.y = 15
+      this.player.emotesHandler.Jump()
+    }
   }
 
   updateCameraTarget(offset) {

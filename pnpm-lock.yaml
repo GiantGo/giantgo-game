@@ -26,6 +26,7 @@ importers:
       eslint-plugin-vue: ^9.17.0
       express: ^4.18.2
       mocha: ^10.2.0
+      nipplejs: ^0.10.1
       pinia: ^2.1.6
       prettier: ^3.0.3
       rimraf: ^5.0.0
@@ -48,6 +49,7 @@ importers:
       colyseus: 0.15.9_@colyseus+schema@2.0.20
       colyseus.js: 0.15.14
       express: 4.18.2
+      nipplejs: 0.10.1
       pinia: 2.1.7_typescript@5.2.2+vue@3.3.4
       three: 0.157.0
       vue: 3.3.4
@@ -83,6 +85,7 @@ importers:
       element-plus: ^2.4.0
       eslint: ^8.49.0
       eslint-plugin-vue: ^9.17.0
+      nipplejs: ^0.10.1
       pinia: ^2.1.6
       prettier: ^3.0.3
       sass: ^1.69.3
@@ -95,6 +98,7 @@ importers:
       '@tweenjs/tween.js': 21.0.0
       '@vueuse/core': 10.5.0_vue@3.3.4
       colyseus.js: 0.15.14
+      nipplejs: 0.10.1
       pinia: 2.1.7_vue@3.3.4
       three: 0.157.0
       vue: 3.3.4
@@ -2472,6 +2476,10 @@ packages:
 
   /nice-try/1.0.5:
     resolution: {integrity: sha512-1nh45deeb5olNY7eX82BkPO7SSxR5SSYJiPTrTdFUVYwAl8CKMA5N9PjTYkHiRjisVcxcQ1HXdLhx2qxxJzLNQ==}
+
+  /nipplejs/0.10.1:
+    resolution: {integrity: sha512-BuKBDfdd7BVK6E7sivHwrRPh9TETsHuHEwuT95nAjRz2uJu5roYngNs+BdRe8nYf8mP6OZ9aRqdgMlqVsDMRcw==}
+    dev: false
 
   /node-gyp-build-optional-packages/5.0.7:
     resolution: {integrity: sha512-YlCCc6Wffkx0kHkmam79GKvDQ6x+QZkMjFGrIMxgFNILFvGSbCp2fCBC55pGTT9gVaz8Na5CLmxt/urtzRv36w==}

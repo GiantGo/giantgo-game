@@ -1,1 +1,1 @@
-export { uuid, random } from './shared'
+export { uuid, random, isMobile } from './shared'
