@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "client": "pnpm -C packages/client dev",
+    "client": "pnpm -C packages/client dev --host",
     "server": "pnpm -C packages/server start",
     "build:client": "pnpm -C packages/client build",
     "build:server": "pnpm -C packages/server build",

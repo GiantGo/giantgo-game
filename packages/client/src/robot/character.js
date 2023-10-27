@@ -80,8 +80,8 @@ class Character {
         this.keyStroke.s = false
       })
 
-      document.getElementById('punchButton').onclick = () => this.punch()
-      document.getElementById('jumpButton').onclick = () => this.jump()
+      document.getElementById('punchButton').addEventListener('pointerdown', () => this.punch())
+      document.getElementById('jumpButton').addEventListener('pointerdown', () => this.jump())
     } else {
       onKeyStroke(
         ['a', 'A', 'ArrowLeft', 'd', 'D', 'ArrowRight', 'w', 'W', 'ArrowUp', 's', 'S', 'ArrowDown'],
